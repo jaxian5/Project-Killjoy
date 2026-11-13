@@ -28,7 +28,8 @@ const ICON_LABEL: Record<IconKey, string> = {
   reactive: "Reactive",
   trapping: "Trapping",
   informative: "Informative",
-  // Neutral-only
+  control: "Control",
+  // Additional faction categories
   survival: "Survival",
   targeted: "Targeted",
   conditional: "Conditional",
