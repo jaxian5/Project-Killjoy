@@ -1,15 +1,59 @@
 export const ICON_KEYS = [
-  "search",
-  "mind",
-  "eye",
-  "moon",
-  "shield",
-  "flame",
-  "mask",
-  "key",
+  // Standard categories (Town / Murderers / Cult / Gray)
+  "offensive",
+  "defensive",
+  "supportive",
+  "investigative",
+  "political",
+  "disruptive",
+  "deceptive",
+  "conversion",
+  "suicidal",
+  "restorative",
+  "reactive",
+  "trapping",
+  "informative",
+  // Neutral-only categories
+  "survival",
+  "targeted",
+  "conditional",
+  "opportunistic",
+  "independent",
+  "elimination",
+  "mission",
+  "majority",
 ] as const;
 
 export type IconKey = (typeof ICON_KEYS)[number];
+
+/** Categories available to Town / Murderers / Cult / Gray */
+export const STANDARD_CATEGORIES: IconKey[] = [
+  "offensive",
+  "defensive",
+  "supportive",
+  "investigative",
+  "political",
+  "disruptive",
+  "deceptive",
+  "conversion",
+  "suicidal",
+  "restorative",
+  "reactive",
+  "trapping",
+  "informative",
+];
+
+/** Categories available only when faction is Neutral */
+export const NEUTRAL_CATEGORIES: IconKey[] = [
+  "survival",
+  "targeted",
+  "conditional",
+  "opportunistic",
+  "independent",
+  "elimination",
+  "mission",
+  "majority",
+];
 
 export type FactionTone = "town" | "murderers" | "cult" | "neutral" | "gray";
 
@@ -49,7 +93,7 @@ export const TEMPLATE: RoleCard = {
   faction: "Town",
   factionTone: "town",
   abilityMode: "Nocturnal",
-  icons: ["search"],
+  icons: ["investigative"],
   avatarName: "Avatar",
   avatarTaken: "Source",
   quote: "Quote",
@@ -93,14 +137,27 @@ function newId() {
   return `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
+/** Map old icon keys from previous versions to the new set */
+const LEGACY_ICON_MAP: Record<string, IconKey> = {
+  search: "investigative",
+  mind: "supportive",
+  eye: "investigative",
+  moon: "survival",
+  shield: "defensive",
+  flame: "offensive",
+  mask: "deceptive",
+  key: "political",
+};
+
 export function normalizeCard(parsed: Partial<RoleCard> | undefined): RoleCard {
-  const icons = (parsed?.icons ?? TEMPLATE.icons).filter((k): k is IconKey =>
-    (ICON_KEYS as readonly string[]).includes(k),
-  );
+  const rawIcons = parsed?.icons ?? TEMPLATE.icons;
+  const icons = rawIcons
+    .map((k) => LEGACY_ICON_MAP[k] ?? k)
+    .filter((k): k is IconKey => (ICON_KEYS as readonly string[]).includes(k));
   return {
     ...blankCard(),
     ...parsed,
-    icons: icons.slice(0, 3).length ? icons.slice(0, 3) : ["search"],
+    icons: icons.slice(0, 3).length ? icons.slice(0, 3) : ["investigative"],
     avatar: { ...DEFAULT_AVATAR, ...parsed?.avatar },
     secondAbility: Boolean(parsed?.secondAbility),
     avatarImage: typeof parsed?.avatarImage === "string" ? parsed.avatarImage : "",
@@ -124,7 +181,9 @@ export function loadLibrary(): { activeId: string; deck: SavedCard[] } {
           card: normalizeCard(item.card),
         }));
       if (deck.length) {
-        const activeId = deck.some((item) => item.id === parsed.activeId) ? parsed.activeId! : deck[0].id;
+        const activeId = deck.some((item) => item.id === parsed.activeId)
+          ? parsed.activeId!
+          : deck[0].id;
         return { activeId, deck };
       }
     }
@@ -148,12 +207,17 @@ function readLegacy(): RoleCard | null {
 }
 
 export function saveLibrary(deck: SavedCard[], activeId: string) {
-  const write = (items: SavedCard[]) => localStorage.setItem(DECK_KEY, JSON.stringify({ activeId, deck: items }));
+  const write = (items: SavedCard[]) =>
+    localStorage.setItem(DECK_KEY, JSON.stringify({ activeId, deck: items }));
   try {
     write(deck);
   } catch {
     try {
-      write(deck.map((item) => (item.id === activeId ? item : { ...item, card: { ...item.card, avatarImage: "" } })));
+      write(
+        deck.map((item) =>
+          item.id === activeId ? item : { ...item, card: { ...item.card, avatarImage: "" } },
+        ),
+      );
     } catch {
       write(deck.map((item) => ({ ...item, card: { ...item.card, avatarImage: "" } })));
     }
@@ -162,4 +226,9 @@ export function saveLibrary(deck: SavedCard[], activeId: string) {
 
 export function makeSavedCard(card: RoleCard = blankCard()): SavedCard {
   return { id: newId(), updatedAt: Date.now(), card };
+}
+
+/** Return the category list that should be offered for a given faction tone */
+export function categoriesForFaction(tone: FactionTone): IconKey[] {
+  return tone === "neutral" ? NEUTRAL_CATEGORIES : STANDARD_CATEGORIES;
 }
