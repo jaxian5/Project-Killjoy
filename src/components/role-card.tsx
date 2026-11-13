@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Search,
   Shield,
+  SlidersHorizontal,
   Skull,
   Sparkles,
   Target,
@@ -40,7 +41,8 @@ const ICONS: Record<IconKey, LucideIcon> = {
   reactive: RotateCcw,
   trapping: Anchor,
   informative: Info,
-  // Neutral-only
+  control: SlidersHorizontal,
+  // Additional faction categories
   survival: Brain,
   targeted: Crosshair,
   conditional: Target,
