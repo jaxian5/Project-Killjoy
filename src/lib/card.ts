@@ -13,7 +13,8 @@ export const ICON_KEYS = [
   "reactive",
   "trapping",
   "informative",
-  // Neutral-only categories
+  "control",
+  // Additional faction categories
   "survival",
   "targeted",
   "conditional",
@@ -41,9 +42,10 @@ export const STANDARD_CATEGORIES: IconKey[] = [
   "reactive",
   "trapping",
   "informative",
+  "control",
 ];
 
-/** Categories available only when faction is Neutral */
+/** Additional categories available to Neutral, Cult, and Gray */
 export const NEUTRAL_CATEGORIES: IconKey[] = [
   "survival",
   "targeted",
@@ -230,5 +232,7 @@ export function makeSavedCard(card: RoleCard = blankCard()): SavedCard {
 
 /** Return the category list that should be offered for a given faction tone */
 export function categoriesForFaction(tone: FactionTone): IconKey[] {
-  return tone === "neutral" ? NEUTRAL_CATEGORIES : STANDARD_CATEGORIES;
+  return tone === "neutral" || tone === "cult" || tone === "gray"
+    ? [...STANDARD_CATEGORIES, ...NEUTRAL_CATEGORIES]
+    : STANDARD_CATEGORIES;
 }
