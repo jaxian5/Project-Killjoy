@@ -3,7 +3,7 @@ import { RoleCardView } from "@/components/role-card";
 import {
   DEFAULT_AVATAR,
   FACTIONS,
-  ICON_KEYS,
+  categoriesForFaction,
   loadLibrary,
   makeSavedCard,
   saveLibrary,
@@ -14,14 +14,29 @@ import {
 } from "@/lib/card";
 
 const ICON_LABEL: Record<IconKey, string> = {
-  search: "Investigative",
-  flame: "Offensive",
-  shield: "Defensive",
-  mind: "Supportive",
-  key: "Political",
-  mask: "Deceptive",
-  eye: "Watch",
-  moon: "Survival",
+  // Standard
+  offensive: "Offensive",
+  defensive: "Defensive",
+  supportive: "Supportive",
+  investigative: "Investigative",
+  political: "Political",
+  disruptive: "Disruptive",
+  deceptive: "Deceptive",
+  conversion: "Conversion",
+  suicidal: "Suicidal",
+  restorative: "Restorative",
+  reactive: "Reactive",
+  trapping: "Trapping",
+  informative: "Informative",
+  // Neutral-only
+  survival: "Survival",
+  targeted: "Targeted",
+  conditional: "Conditional",
+  opportunistic: "Opportunistic",
+  independent: "Independent",
+  elimination: "Elimination",
+  mission: "Mission-based",
+  majority: "Majority",
 };
 
 const MODES: AbilityMode[] = ["Nocturnal", "Diurnal", "Cathemeral"];
@@ -130,6 +145,8 @@ export function CardStudio() {
 
   if (!card) return null;
 
+  const availableCategories = categoriesForFaction(card.factionTone);
+
   return (
     <main className="studio">
       <header className="studio-bar">
@@ -197,7 +214,13 @@ export function CardStudio() {
                   onChange={(e) => {
                     const tone = e.target.value as RoleCard["factionTone"];
                     const found = FACTIONS.find((f) => f.tone === tone);
-                    patch({ factionTone: tone, faction: found?.label ?? card.faction });
+                    const allowed = categoriesForFaction(tone);
+                    const kept = card.icons.filter((k) => allowed.includes(k));
+                    patch({
+                      factionTone: tone,
+                      faction: found?.label ?? card.faction,
+                      icons: kept.length ? kept : [allowed[0]],
+                    });
                   }}
                 >
                   {FACTIONS.map((f) => (
@@ -230,7 +253,7 @@ export function CardStudio() {
           <fieldset>
             <legend>Categories · {card.icons.length}/3</legend>
             <div className="picks">
-              {ICON_KEYS.map((key) => (
+              {availableCategories.map((key) => (
                 <button
                   key={key}
                   type="button"
